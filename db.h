@@ -5,7 +5,8 @@
 #include <string>
 #include <unordered_map>
 #include <queue>
-#include <boost/thread/mutex.hpp>
+#include <thread>
+#include <mutex>
 
 #include "logger.h"
 
@@ -31,12 +32,12 @@ class mysql {
 
 		// These locks prevent more than one thread from reading/writing the buffers.
 		// These should be held for the minimum time possible.
-		boost::mutex user_buffer_lock;
-		boost::mutex torrent_buffer_lock;
-		boost::mutex peer_buffer_lock;
-		boost::mutex snatch_buffer_lock;
-		boost::mutex user_token_lock;
-		boost::mutex peer_hist_buffer_lock;
+		std::mutex user_buffer_lock;
+		std::mutex torrent_buffer_lock;
+		std::mutex peer_buffer_lock;
+		std::mutex snatch_buffer_lock;
+		std::mutex user_token_lock;
+		std::mutex peer_hist_buffer_lock;
 		
 		void do_flush_users();
 		void do_flush_torrents();
@@ -70,7 +71,7 @@ class mysql {
 
 		bool all_clear();
 		
-		boost::mutex torrent_list_mutex;
+		std::mutex torrent_list_mutex;
 
 		logger* logger_ptr;
 };

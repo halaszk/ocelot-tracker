@@ -17,7 +17,7 @@ config::config() {
 	mysql_db = "gazelle";
 	mysql_host = "127.0.0.1:3306";
 	mysql_username = "root";
-	mysql_password = "poop";
+	mysql_password = "Test;";
 	
 	site_password="********************************"; // MUST BE 32 CHARS
 }

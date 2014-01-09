@@ -24,7 +24,7 @@ logger *logger::get_instance(void) {
 }
 
 bool logger::log(std::string msg) {
-	boost::mutex::scoped_lock lock(log_lock_);
+	std::unique_lock<std::mutex> lck(log_lock_);
 	if(log_file_.is_open()) {
 		log_file_ << msg << std::endl;
 		log_file_.flush();
