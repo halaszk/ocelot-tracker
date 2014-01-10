@@ -1,33 +1,14 @@
-:: About
+### About
 
-The ocelot tracker has a long and storied [past](http://torrentfreak.com/what-cd-debuts-lightweight-tracker-for-its-5-million-peers-101014/).
+Ocelot development continues with project gazelle (http://whatcd.github.io/Gazelle/).
 
-A friend of mine asked me to take a look at it a while back, and I ended
-up making some modifications related to setuid() and IPv6. I posted a patch
-to the what.cd developer forums, but received no helpful responses. 
+This repo is based on an older 0.6 release of ocelot. We have added a few patches related to setuid(), ipv6, and c++11 refactoring (by SHTheSuper).
 
-I've kept these changes private for a long time. I'm releasing them now
-because it seems like the public-facing what.cd forums have shut down. Every
-page seems to display only an "Unexpected error" message (as of 07/24/2012,
-but this has been the case for months).
+I'm not a what.cd member or developer, I just stumbled across the source code a few years ago.
 
-My hope is that people who want to work on ocelot will have an easier time
-on github.
+### License
 
-:: Todo
-
-- Make worker::work and children threadsafe.
-- In connection_middleman::handle_read, use multiple threads to compute responses.
-- Investiage if compression would be useful.
-- Replace std::map with something more efficient. (According to profiling data, the only function busier than worker::work is std::_Rb_tree::_M_lower_bound, which is used by std::map.)
-
-:: Notes
-
-- Only one announce is possible at a time because db->torrent_list_mutex is locked.
-
-:: License
-
-Ocelot does not ship with a license file. I don't know what the original
+Ocelot 0.6 did not ship with a license file. I don't know what the original
 developers' wishes were, but the standard disclaimer no doubt applies;
 
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
