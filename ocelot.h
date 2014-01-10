@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <set>
-#include <boost/thread/thread.hpp>
+#include <thread>
 
 typedef struct {
 	int userid;

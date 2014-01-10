@@ -5,7 +5,8 @@
 #include <iostream>
 #include <fstream>
 
-#include <boost/thread/mutex.hpp>
+#include <thread>
+#include <mutex>
 
 class logger {
 
@@ -19,7 +20,7 @@ class logger {
 
         private:
                 static logger* singletonInstance_;
-                boost::mutex log_lock_;
+                std::mutex log_lock_;
 		std::ofstream log_file_;
 };
 

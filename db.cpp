@@ -102,7 +102,7 @@ void mysql::load_whitelist(std::vector<std::string> &whitelist) {
 }
 
 void mysql::record_token(std::string &record) {
-        boost::mutex::scoped_lock lock(user_token_lock);
+  std::lock_guard<std::mutex> lck(user_token_lock);
         if (update_token_buffer != "") {
                 update_token_buffer += ",";
         }
@@ -110,21 +110,21 @@ void mysql::record_token(std::string &record) {
 }
 
 void mysql::record_user(std::string &record) {
-        boost::mutex::scoped_lock lock(user_buffer_lock);
+        std::lock_guard<std::mutex> lck(user_buffer_lock);
         if(update_user_buffer != "") {
                 update_user_buffer += ",";
         }
         update_user_buffer += record;
 }
 void mysql::record_torrent(std::string &record) {
-        boost::mutex::scoped_lock lock(torrent_buffer_lock);
+        std::lock_guard<std::mutex> lck(torrent_buffer_lock);
         if(update_torrent_buffer != "") {
                 update_torrent_buffer += ",";
         }
         update_torrent_buffer += record;
 }
 void mysql::record_peer(std::string &record, std::string &ip, std::string &peer_id, std::string &useragent) {
-        boost::mutex::scoped_lock lock(peer_buffer_lock);
+        std::lock_guard<std::mutex> lck(peer_buffer_lock);
         if(update_peer_buffer != "") {
                 update_peer_buffer += ",";
         }
@@ -135,7 +135,7 @@ void mysql::record_peer(std::string &record, std::string &ip, std::string &peer_
 }
 
 void mysql::record_peer_hist(std::string &record, std::string &peer_id, int tid) {
-	boost::mutex::scoped_lock (peer_hist_buffer_lock);
+	std::unique_lock<std::mutex> (peer_hist_buffer_lock);
 	if (update_peer_hist_buffer != "") {
 		update_peer_hist_buffer += ",";
 	}
@@ -145,7 +145,7 @@ void mysql::record_peer_hist(std::string &record, std::string &peer_id, int tid)
 }
 
 void mysql::record_snatch(std::string &record) {
-        boost::mutex::scoped_lock lock(mysql::snatch_buffer_lock);
+        std::lock_guard<std::mutex> lck(mysql::snatch_buffer_lock);
         if(update_snatch_buffer != "") {
                 update_snatch_buffer += ",";
         }
@@ -167,7 +167,7 @@ void mysql::flush() {
 
 void mysql::flush_users() {
 	std::string sql;
-	boost::mutex::scoped_lock lock(user_buffer_lock);
+	std::lock_guard<std::mutex> lck(user_buffer_lock);
 	if (update_user_buffer == "") {
 		return;
 	}
@@ -176,13 +176,13 @@ void mysql::flush_users() {
 	user_queue.push(sql);
 	update_user_buffer.clear();
 	if (user_queue.size() == 1 && u_active == false) {
-		boost::thread thread(&mysql::do_flush_users, this);
+		std::thread thread(&mysql::do_flush_users, this);
 	}
 }
 
 void mysql::flush_torrents() {
 	std::string sql;
-	boost::mutex::scoped_lock lock(torrent_buffer_lock);
+	std::lock_guard<std::mutex> lck(torrent_buffer_lock);
 	if (update_torrent_buffer == "") {
 		return;
 	}
@@ -196,13 +196,13 @@ void mysql::flush_torrents() {
 	sql = "DELETE FROM torrents WHERE info_hash = ''";
 	torrent_queue.push(sql);
 	if (torrent_queue.size() == 2 && t_active == false) {
-		boost::thread thread(&mysql::do_flush_torrents, this);
+		std::thread thread(&mysql::do_flush_torrents, this);
 	}
 }
 
 void mysql::flush_snatches() {
 	std::string sql;
-	boost::mutex::scoped_lock lock(snatch_buffer_lock);
+	std::lock_guard<std::mutex> lck(snatch_buffer_lock);
 	if (update_snatch_buffer == "" ) {
 		return;
 	}
@@ -210,13 +210,13 @@ void mysql::flush_snatches() {
 	snatch_queue.push(sql);
 	update_snatch_buffer.clear();
 	if (snatch_queue.size() == 1 && s_active == false) {
-		boost::thread thread(&mysql::do_flush_snatches, this);
+		std::thread thread(&mysql::do_flush_snatches, this);
 	}
 }
 
 void mysql::flush_peers() {
 	std::string sql;
-	boost::mutex::scoped_lock lock(peer_buffer_lock);
+	std::lock_guard<std::mutex> lck(peer_buffer_lock);
 	// because xfu inserts are slow and ram is not infinite we need to
 	// limit this queue's size
 	if (peer_queue.size() >= 1000) {
@@ -242,13 +242,13 @@ void mysql::flush_peers() {
 	peer_queue.push(sql);
 	update_peer_buffer.clear();
 	if (peer_queue.size() == 2 && p_active == false) {
-		boost::thread thread(&mysql::do_flush_peers, this);
+		std::thread thread(&mysql::do_flush_peers, this);
 	}
 }
 
 void mysql::flush_peer_hist() {
 	std::string sql;
-	boost::mutex::scoped_lock lock(peer_hist_buffer_lock);
+	std::lock_guard<std::mutex> lck(peer_hist_buffer_lock);
 	if (update_peer_hist_buffer == "") {
 		return;
 	}
@@ -263,13 +263,13 @@ void mysql::flush_peer_hist() {
 	peer_hist_queue.push(sql);
 	update_peer_hist_buffer.clear();
 	if (peer_hist_queue.size() == 2 && hist_active == false) {
-		boost::thread thread(&mysql::do_flush_peer_hist, this);
+		std::thread thread(&mysql::do_flush_peer_hist, this);
 	}
 }
 
 void mysql::flush_tokens() {
 	std::string sql;
-	boost::mutex::scoped_lock lock(user_token_lock);
+	std::lock_guard<std::mutex> lck(user_token_lock);
 	if (update_token_buffer == "") {
 		return;
 	}
@@ -278,7 +278,7 @@ void mysql::flush_tokens() {
 	token_queue.push(sql);
 	update_token_buffer.clear();
 	if (token_queue.size() == 1 && tok_active == false) {
-		boost::thread(&mysql::do_flush_tokens, this);
+		std::thread(&mysql::do_flush_tokens, this);
 	}
 }
 
@@ -294,7 +294,7 @@ void mysql::do_flush_users() {
 				sleep(3);
 				continue;
 			} else {
-				boost::mutex::scoped_lock lock(user_buffer_lock);
+				std::lock_guard<std::mutex> lck(user_buffer_lock);
 				user_queue.pop();
 				std::cout << "Users flushed (" << user_queue.size() << " remain)" << std::endl;
 			}
@@ -328,7 +328,7 @@ void mysql::do_flush_torrents() {
 				sleep(3);
 				continue;
 			} else {
-				boost::mutex::scoped_lock lock(torrent_buffer_lock);
+				std::lock_guard<std::mutex> lck(torrent_buffer_lock);
 				torrent_queue.pop();
 				std::cout << "Torrents flushed (" << torrent_queue.size() << " remain)" << std::endl;
 			}
@@ -358,7 +358,7 @@ void mysql::do_flush_peers() {
 				sleep(3);
 				continue;
 			} else {
-				boost::mutex::scoped_lock lock(peer_buffer_lock);
+				std::lock_guard<std::mutex> lck(peer_buffer_lock);
 				peer_queue.pop();
 				std::cout << "Peers flushed (" << peer_queue.size() << " remain)" << std::endl;
 			}
@@ -388,7 +388,7 @@ void mysql::do_flush_peer_hist() {
 				sleep(3);
 				continue;
 			} else {
-				boost::mutex::scoped_lock lock(peer_hist_buffer_lock);
+				std::lock_guard<std::mutex> lck(peer_hist_buffer_lock);
 				peer_hist_queue.pop();
 				std::cout << "Peer history flushed (" << peer_hist_queue.size() << " remain)" << std::endl;
 			}
@@ -418,7 +418,7 @@ void mysql::do_flush_snatches() {
 				sleep(3);
 				continue;
 			} else {
-				boost::mutex::scoped_lock lock(snatch_buffer_lock);
+				std::lock_guard<std::mutex> lck(snatch_buffer_lock);
 				snatch_queue.pop();
 				std::cout << "Snatches flushed (" << snatch_queue.size() << " remain)" << std::endl;
 			}
@@ -448,7 +448,7 @@ void mysql::do_flush_tokens() {
 				sleep(3);
 				continue;
 			} else {
-				boost::mutex::scoped_lock lock(user_token_lock);
+				std::lock_guard<std::mutex> lck(user_token_lock);
 				token_queue.pop();
 				std::cout << "Tokens flushed (" << token_queue.size() << " remain)" << std::endl;
 			}

@@ -172,7 +172,7 @@ std::string worker::work(std::string &input, std::string &ip) {
 	}
 
 	if(action == ANNOUNCE) {
-		boost::mutex::scoped_lock lock(db->torrent_list_mutex);
+		std::unique_lock<std::mutex> lock(db->torrent_list_mutex);
 		// Let's translate the infohash into something nice
 		// info_hash is a url encoded (hex) base 20 number
 		std::string info_hash_decoded = hex_decode(params["info_hash"]);
@@ -723,7 +723,7 @@ std::string worker::update(std::map<std::string, std::string> &params) {
 
 void worker::reap_peers() {
 	std::cout << "started reaper" << std::endl;
-	boost::thread thread(&worker::do_reap_peers, this);
+	std::thread thread(&worker::do_reap_peers, this);
 }
 
 void worker::do_reap_peers() {
@@ -738,7 +738,7 @@ void worker::do_reap_peers() {
 			if(p->second.last_announced + conf->peers_timeout < cur_time) {
 				del_p = p;
 				p++;
-				boost::mutex::scoped_lock lock(db->torrent_list_mutex);
+				std::unique_lock<std::mutex> lock(db->torrent_list_mutex);
 				i->second.leechers.erase(del_p);
 				reaped++;
 			} else {
@@ -750,7 +750,7 @@ void worker::do_reap_peers() {
 			if(p->second.last_announced + conf->peers_timeout < cur_time) {
 				del_p = p;
 				p++;
-				boost::mutex::scoped_lock lock(db->torrent_list_mutex);
+				std::unique_lock<std::mutex> lock(db->torrent_list_mutex);
 				i->second.seeders.erase(del_p);
 				reaped++;
 			} else {
